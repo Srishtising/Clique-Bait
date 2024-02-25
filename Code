@@ -1,0 +1,71 @@
+--1 How many users are there?
+select count(distinct user_id) Total_user from clique_bait.users;
+
+--2 How many cookies does each user have on average?
+with ct1 as(
+select user_id, count(cookie_id) as tot_cookie from clique_bait.users
+group by user_id
+ )
+ select user_id, round(avg(tot_cookie),2) as avg_cookie from ct1 group by user_id
+ limit 10;
+ 
+ --3 What is the unique number of visits by all users per month?
+select TO_CHAR(TO_DATE(DATE_PART('MONTH',START_DATE)::TEXT,'MM'),'MONTH') AS MONTH, USER_ID, COUNT(USER_ID) AS TOTAL_VISIT_PER_MONTH
+from clique_bait.users
+GROUP BY TO_CHAR(TO_DATE(DATE_PART('MONTH',START_DATE)::TEXT,'MM'),'MONTH'), USER_ID
+ORDER BY USER_ID
+limit 10;
+
+--4 What is the number of events for each event type?
+SELECT e.event_type,ei.event_name, count(*) from clique_bait.events as e join 
+clique_bait.event_identifier as ei on e.event_type=ei.event_type
+group by e.event_type, ei.event_name
+order by e.event_type;
+
+
+  -- 7 What is the number of views and cart adds for each product category?
+  select ph.product_category, count(*) as total_view, count(case when event_type=2 then 1 else null end) as Add_to_cart
+  from clique_bait.events as e join  clique_bait.page_hierarchy as ph
+  on e.page_id=ph.page_id
+  where ph.product_category <> 'null'
+  group by ph.product_category;
+  
+  
+--6 What are the top 3 pages by number of views?
+select page_id, count(*) as Total_page_view from clique_bait.events
+group by page_id
+order by count(*) desc
+limit 3;
+
+
+--5 What is the percentage of visits which have a purchase event?
+select round(count(case when event_type=3 then 1 else null end)*100.0/count(*),2) as percentage_of_visits
+from clique_bait.events;
+
+--8 What are the top 3 products by purchases?
+select * 
+from clique_bait.events as e join  clique_bait.page_hierarchy as ph
+  on e.page_id=ph.page_id
+  where e.event_type=3
+  --group by ph.product_category;
+  
+--9 How many times was each product viewed?
+select ph.product_category, count(*) as Total_view
+from clique_bait.events as e join  clique_bait.page_hierarchy as ph
+  on e.page_id=ph.page_id
+where e.event_type=1 and ph.product_category <> 'null'
+group by ph.product_category;
+
+--10 How many times was each product added to cart?
+select ph.product_category, count(*) as Total_view
+from clique_bait.events as e join  clique_bait.page_hierarchy as ph
+  on e.page_id=ph.page_id
+where e.event_type=2 and ph.product_category <> 'null'
+group by ph.product_category;
+
+
+  
+  
+  
+  
+  
