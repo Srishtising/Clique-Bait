@@ -64,6 +64,29 @@ where e.event_type=2 and ph.product_category <> 'null'
 group by ph.product_category;
 
 
+--11 Generate a table that has 1 single row for every unique visit_id record and has the following columns:
+
+user_id
+visit_id
+visit_start_time: the earliest event_time for each visit
+page_views: count of page views for each visit
+cart_adds: count of product cart add events for each visit
+purchase: 1/0 flag if a purchase event exists for each visit
+campaign_name: map the visit to a campaign if the visit_start_time falls between the start_date and end_date
+impression: count of ad impressions for each visit
+click: count of ad clicks for each visit
+(Optional column) cart_products: a comma separated text value with products added to the cart sorted by the order they were added to the cart (hint: use the sequence_number)
+
+select u.user_id,e.visit_id, min(e.event_time), count(e.visit_id) as tot_visit,
+count(case when e.event_type=2 then 1 else null end) as tot_cart,
+count(case when e.event_type=3 then 1 else null end) as tot_purchase,
+count(case when e.event_type=4 then 1 else null end) as tot_add_imp,
+count(case when e.event_type=5 then 1 else null end) as tot_click,
+string_agg(case when e.event_type=2 then ph.product_category end, ', 'order by e.sequence_number)
+from clique_bait.users as u join clique_bait.events as e on 
+u.cookie_id=e.cookie_id join clique_bait.page_hierarchy as ph
+on e.page_id=ph.page_id
+group by u.user_id,e.visit_id
   
   
   
